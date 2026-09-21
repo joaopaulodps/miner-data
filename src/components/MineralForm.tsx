@@ -48,10 +48,10 @@ export default function MineralForm({
       if (data.url) {
         setImageUrl(data.url);
       } else {
-        alert("Erro ao fazer upload da imagem.");
+        alert(`Erro: ${data.error || "Erro desconhecido"}\n${data.details || ""}`);
       }
-    } catch {
-      alert("Erro ao fazer upload da imagem.");
+    } catch (err) {
+      alert(`Erro de conexão: ${err}`);
     } finally {
       setUploading(false);
     }
