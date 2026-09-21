@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { put } from "@vercel/blob";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -15,19 +21,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!process.env.CLOUDINARY_API_SECRET) {
     return NextResponse.json(
-      { error: "BLOB_READ_WRITE_TOKEN not configured" },
+      { error: "Cloudinary not configured" },
       { status: 500 }
     );
   }
 
   try {
-    const blob = await put(file.name, file, {
-      access: "public",
-    });
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    return NextResponse.json({ url: blob.url });
+    const result = await new Promise<{ secure_url: string }>(
+      (resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "minerdata",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result as { secure_url: string });
+          }
+        );
+        uploadStream.end(buffer);
+      }
+    );
+
+    return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
