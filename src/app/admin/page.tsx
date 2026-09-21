@@ -26,7 +26,6 @@ export default async function AdminPage() {
           >
             + Novo Mineral
           </Link>
-          <SignOutButton />
         </div>
       </div>
 
