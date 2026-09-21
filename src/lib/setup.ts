@@ -1,14 +1,16 @@
+import "dotenv/config";
 import { createClient } from "@libsql/client";
 
 async function setup() {
   const client = createClient({
-    url: "file:local.db",
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN,
   });
 
-  await client.execute(`DROP TABLE IF EXISTS minerals`);
+  console.log("Creating table on Turso...");
 
   await client.execute(`
-    CREATE TABLE minerals (
+    CREATE TABLE IF NOT EXISTS minerals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       slug TEXT NOT NULL UNIQUE,
@@ -25,7 +27,7 @@ async function setup() {
     )
   `);
 
-  console.log("Table recreated successfully!");
+  console.log("Table created successfully on Turso!");
 }
 
 setup().catch(console.error);

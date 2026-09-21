@@ -1,10 +1,12 @@
+import "dotenv/config";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import { minerals } from "./schema";
 import { toSlug } from "./slug";
 
 const client = createClient({
-  url: "file:local.db",
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
 const db = drizzle(client);
@@ -109,7 +111,7 @@ const seedMinerals = [
 ];
 
 async function seed() {
-  console.log("Seeding database...");
+  console.log("Seeding database on Turso...");
   await db.delete(minerals);
   await db.insert(minerals).values(
     seedMinerals.map((m) => ({
@@ -117,7 +119,7 @@ async function seed() {
       slug: toSlug(m.name),
     }))
   );
-  console.log(`Seeded ${seedMinerals.length} minerals.`);
+  console.log(`Seeded ${seedMinerals.length} minerals on Turso!`);
 }
 
 seed().catch(console.error);
